@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  backend:
+    image: warden/backend:latest
+    environment:
+      NODE_ENV: production
+    env_file:
+      - ./backend/.env.production
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+  redis:
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  elasticsearch:
+    environment:
+      - "ES_JAVA_OPTS=-Xms1g -Xmx2g"
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+
+  mysql:
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+    command: --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=1G

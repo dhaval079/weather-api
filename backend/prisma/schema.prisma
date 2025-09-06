@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["fullTextIndex"]
 }
 
 datasource db {
@@ -24,4 +25,9 @@ model Property {
   @@index([isActive, city])
   @@index([lat, lng])
   @@index([geohash5])
+  @@index([city, state])
+  @@index([isActive, geohash5])
+  @@index([isActive, city, state])
+  @@index([createdAt])
+  @@fulltext([name])
 }
