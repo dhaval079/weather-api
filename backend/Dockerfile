@@ -1,41 +1,52 @@
-# Multi-stage build for production optimization
-FROM node:18-alpine AS builder
-
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
-
+# Development stage - Fast and simple
 FROM node:18-alpine AS development
 WORKDIR /app
+
+# Copy package files first for better caching
 COPY package*.json ./
-RUN npm install
+
+# Install dependencies
+RUN npm ci --no-audit --no-fund && npm cache clean --force
+
+# Copy source code
 COPY . .
-EXPOSE 5000
-CMD ["npm", "run", "dev:enhanced"]
 
-FROM builder AS production-deps
-RUN npm ci --only=production --no-audit --no-fund
+# Generate Prisma client
+RUN npx prisma generate
 
-FROM node:18-alpine AS build
+EXPOSE 5001
+CMD ["npm", "run", "dev"]
+
+# Production stage - Optimized
+FROM node:18-alpine AS production
+
+# Install security updates
+RUN apk upgrade --no-cache
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && adduser -S warden -u 1001
+
 WORKDIR /app
+
+# Copy package files
 COPY package*.json ./
-RUN npm ci
+
+# Install production dependencies only
+RUN npm ci --only=production --no-audit --no-fund && npm cache clean --force
+
+# Copy source and build
 COPY . .
 RUN npx prisma generate
 RUN npm run build
 
-FROM node:18-alpine AS production
-RUN addgroup -g 1001 -S nodejs && adduser -S warden -u 1001
-WORKDIR /app
-COPY --from=production-deps --chown=warden:nodejs /app/node_modules ./node_modules
-COPY --from=build --chown=warden:nodejs /app/dist ./dist
-COPY --from=build --chown=warden:nodejs /app/prisma ./prisma
-COPY --chown=warden:nodejs package*.json ./
+# Change ownership to non-root user
+RUN chown -R warden:nodejs /app
 
 USER warden
-EXPOSE 5000
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:5000/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) })"
+EXPOSE 5001
 
-CMD ["npm", "start:enhanced"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:5001/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) })"
+
+CMD ["npm", "start"]

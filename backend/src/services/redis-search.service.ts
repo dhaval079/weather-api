@@ -24,8 +24,11 @@ export class RedisSearchService {
         'SCHEMA',
         'id', 'NUMERIC', 'SORTABLE',
         'name', 'TEXT', 'WEIGHT', '2.0',
-        'city', 'TAG', 'SORTABLE',
-        'state', 'TAG',
+        'displayName', 'TEXT',
+        'city', 'TEXT', 'SORTABLE',
+        'displayCity', 'TEXT',
+        'state', 'TEXT',
+        'displayState', 'TEXT',
         'lat', 'NUMERIC',
         'lng', 'NUMERIC',
         'isActive', 'TAG',
@@ -46,9 +49,12 @@ export class RedisSearchService {
       const key = `property:${property.id}`;
       const data = {
         id: property.id,
-        name: property.name || '',
-        city: property.city || '',
-        state: property.state || '',
+        name: (property.name || '').toLowerCase(),
+        displayName: property.name || '',
+        city: (property.city || '').toLowerCase(),
+        displayCity: property.city || '',
+        state: (property.state || '').toLowerCase(),
+        displayState: property.state || '',
         lat: property.lat || 0,
         lng: property.lng || 0,
         isActive: property.isActive ? '1' : '0',
@@ -74,9 +80,12 @@ export class RedisSearchService {
         const key = `property:${property.id}`;
         const data = {
           id: property.id,
-          name: property.name || '',
-          city: property.city || '',
-          state: property.state || '',
+          name: (property.name || '').toLowerCase(),
+          displayName: property.name || '',
+          city: (property.city || '').toLowerCase(),
+          displayCity: property.city || '',
+          state: (property.state || '').toLowerCase(),
+          displayState: property.state || '',
           lat: property.lat || 0,
           lng: property.lng || 0,
           isActive: property.isActive ? '1' : '0',
@@ -133,7 +142,13 @@ export class RedisSearchService {
             property[key] = parseFloat(value) || 0;
           } else if (key === 'isActive') {
             property[key] = value === '1';
-          } else {
+          } else if (key === 'displayName') {
+            property['name'] = value;
+          } else if (key === 'displayCity') {
+            property['city'] = value;
+          } else if (key === 'displayState') {
+            property['state'] = value;
+          } else if (key !== 'name' && key !== 'city' && key !== 'state') {
             property[key] = value;
           }
         }
@@ -157,15 +172,18 @@ export class RedisSearchService {
     const conditions: string[] = ['@isActive:{1}'];
 
     if (params.searchText) {
-      conditions.push(`@name:(${this.escapeQuery(params.searchText)})`);
+      const cleanQuery = this.escapeQuery(params.searchText.toLowerCase());
+      conditions.push(`@name:(*${cleanQuery}*)`);
     }
 
     if (params.city) {
-      conditions.push(`@city:{${this.escapeTag(params.city)}}`);
+      const cleanCity = this.escapeQuery(params.city.toLowerCase());
+      conditions.push(`@city:(*${cleanCity}*)`);
     }
 
     if (params.state) {
-      conditions.push(`@state:{${this.escapeTag(params.state)}}`);
+      const cleanState = this.escapeQuery(params.state.toLowerCase());
+      conditions.push(`@state:(*${cleanState}*)`);
     }
 
     if (params.tempMin !== undefined) {
@@ -207,7 +225,7 @@ export class RedisSearchService {
   }
 
   private escapeQuery(query: string): string {
-    return query.replace(/[^\w\s]/g, '\\$&');
+    return query.replace(/[^a-zA-Z0-9\s]/g, '');
   }
 
   private escapeTag(tag: string): string {

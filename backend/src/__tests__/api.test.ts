@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from '../enhanced-index';
+import app from '../index';
 
 describe('API Integration Tests', () => {
   describe('GET /health', () => {

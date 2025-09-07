@@ -9,7 +9,7 @@
     "prisma:gen": "prisma generate",
     "db:seed": "ts-node prisma/seed.ts",
     "db:migrate": "prisma migrate dev",
-    "redis:sync": "curl -X POST http://localhost:5000/admin/sync-redis",
+    "redis:sync": "curl -X POST http://localhost:5001/admin/sync-redis",
     "docker:dev": "docker-compose up --build",
     "docker:prod": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --build",
     "docker:monitoring": "docker-compose -f monitoring/docker-compose.monitoring.yml up -d",
@@ -43,6 +43,6 @@
     "ioredis": "^5.7.0",
     "node-cron": "^4.2.1",
     "redis": "^5.8.2",
-    "repomix": "^0.3.9"
+    "repomix": "^0.3.9" 
   }
 }

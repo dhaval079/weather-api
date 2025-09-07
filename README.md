@@ -54,7 +54,7 @@ After a 6 hour meeting, following filters and constraints were finalized.
    ```bash
    npm run dev
    ```
-   open `http://localhost:5000` you should see "Warden Weather Test: OK"
+   open `http://localhost:5001` you should see "Warden Weather Test: OK"
 
 ## Technical Expectations
 
