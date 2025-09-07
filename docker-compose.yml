@@ -9,8 +9,8 @@ services:
       dockerfile: Dockerfile
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=${DATABASE_URL:-postgresql://user:password@host:5432/dbname}
-      - REDIS_URL=${REDIS_URL:-redis://localhost:6379}
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
       - PORT=5001
     ports:
       - "5001:5001"
